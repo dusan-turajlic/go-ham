@@ -1,0 +1,42 @@
+version: '3.9'
+services:
+  goham:
+    build:
+      context: ./docker
+      target: base
+    ports:
+      - "8080:8080"
+    volumes:
+      - ".:/home/goham/application"
+    environment:
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_USERNAME: "${DB_USERNAME}"
+      DB_PASSWORD: "${DB_PASSWORD}"
+      DB_DATABASE: "${DB_DATABASE}"
+    entrypoint: |
+      sh -c "./docker/entrypoint.sh"
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:15.0-alpine
+    restart: always
+    ports:
+      - "127.0.0.1:${DB_FORWARD_PORT:-5432}:5432"
+    volumes:
+      - "ham-postgres:/var/lib/postgresql/data:cached"
+    networks:
+      - app
+    environment:
+      POSTGRES_USER: "${DB_USERNAME}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_DB: "${DB_DATABASE}"
+
+networks:
+  app:
+    driver: bridge
+
+volumes:
+  ham-postgres:
+    driver: local
